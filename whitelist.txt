@@ -117,6 +117,7 @@ Europe/Madrid
 Europe/Minsk
 Europe/Moscow
 Europe/Sarajevo
+Europe/Warsaw
 Pacific/Auckland
 Pacific/Fiji
 Pacific/Guam
