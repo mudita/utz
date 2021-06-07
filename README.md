@@ -45,3 +45,11 @@ most zones is implemented.
    `python3 utils/generate_zones.py -d vendor/tzdata -r africa -r asia -r australasia -r backward -r europe -r northamerica -r pacificnew -r southamerica -w whitelist.txt -i majorcities`
 
 Include different regions in step 5 based on your preferences
+
+## How to update the database 
+
+1. Download the current (tzdata<version>.tar.gz) database from:
+https://www.iana.org/time-zones
+2. Unpack the archive 
+3. Replace the files in the directory:
+   `utz/vendor/tzdata`
