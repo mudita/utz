@@ -151,6 +151,10 @@ typedef struct urule_t {
   uint8_t offset_hours;
 } urule_t;
 
+#ifdef	__cplusplus
+extern "C" {
+#endif
+
 /**************************************************************************/
 /*                         datetime functions                             */
 /**************************************************************************/
@@ -336,5 +340,9 @@ extern const urule_packed_t zone_rules[];
 extern const uzone_packed_t zone_defns[];
 extern const char zone_abrevs[];
 extern const unsigned char zone_names[];
+
+#ifdef	__cplusplus
+}
+#endif
 
 #endif /* _UTZ_H */

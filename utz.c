@@ -257,7 +257,7 @@ void get_zone_by_name(char* name, uzone_t* zone_out) {
 #ifndef UTZ_GLOBAL_COUNTERS
   uint16_t utz_k;
 #endif
-  const char* zone = zone_names;
+  const char* zone = (char*)zone_names;
   for (utz_k = 0; utz_k < NUM_ZONE_NAMES; utz_k++) {
     if (ustrneq(zone, name, MAX_ZONE_NAME_LEN)) {
       unpack_zone(&zone_defns[get_next(&zone)], name, zone_out);
