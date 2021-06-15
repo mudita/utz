@@ -5,6 +5,7 @@
  */
 
 #include <stdint.h>
+#include <string.h>
 
 #include "utz.h"
 #include "zones.h"
@@ -32,6 +33,8 @@ const char months_of_year[] = {
 'N','o','v','e','m','b','e','r','\0',
 'D','e','c','e','m','b','e','r','\0',
 };
+
+static const uint8_t days_in_month_nonleap[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
 
 const uzone_packed_t* last_zone;
 uint8_t last_year;
@@ -97,7 +100,6 @@ uint8_t is_leap_year(uint8_t y) {
 }
 
 uint8_t days_in_month(uint8_t y, uint8_t m) {
-  static const uint8_t days_in_month_nonleap[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
   if (m == 2 && is_leap_year(y)) {
     return days_in_month_nonleap[m] + 1;
   } else {
@@ -118,6 +120,19 @@ int16_t udatetime_cmp(udatetime_t* dt1, udatetime_t* dt2) {
   ret = dt1->time.minute - dt2->time.minute; if(ret != 0) { return ret; }
   ret = dt1->time.second - dt2->time.second; if(ret != 0) { return ret; }
   return 0;
+}
+
+uint16_t get_day_in_year(urule_packed_t* packedRules, uint8_t cur_year) {
+  urule_t rule;
+  uint16_t result = 0;
+  unpack_rule(packedRules, cur_year, &rule);
+  if (rule.date.month <= 13) {
+    for (uint8_t i = 0; i < rule.date.month; i++) {
+      result += days_in_month_nonleap[i];
+    }
+    result += rule.date.dayofmonth;
+  }
+  return result;
 }
 
 void unpack_rule(const urule_packed_t* rule_in, uint8_t cur_year, urule_t* rule_out) {
@@ -239,6 +254,40 @@ void unpack_zone(const uzone_packed_t* zone_in, const char* name, uzone_t* zone_
   zone_out->abrev_formatter = &zone_abrevs[zone_in->abrev_formatter];
 }
 
+int get_zone_rules(const uzone_packed_t* zone_in, uint8_t cur_year, urule_packed_t* start_rules, urule_packed_t* end_rules) {
+  uint8_t rulesCounter = 0;
+  urule_packed_t rulesTab[2];
+  for (uint8_t i = 0; i < zone_in->rules_len; i++) {
+    urule_packed_t rules = zone_rules[zone_in->rules_idx + i];
+
+    if (rules.from_year <= cur_year && rules.to_year >= cur_year) {
+      if (rulesCounter < 2) {
+        memcpy(&rulesTab[rulesCounter], &rules, sizeof(rules));
+      }
+
+      rulesCounter++;
+      if (rulesCounter == 2) {
+        break;
+      }
+    }
+  }
+
+  if (rulesCounter < 2) {
+    return -1;
+  }
+  else {
+    if (rulesTab[0].offset_hours) {
+      memcpy(start_rules, &rulesTab[0], sizeof(rulesTab[0]));
+      memcpy(end_rules, &rulesTab[1], sizeof(rulesTab[1]));
+    }
+    else {
+      memcpy(start_rules, &rulesTab[1], sizeof(rulesTab[1]));
+      memcpy(end_rules, &rulesTab[0], sizeof(rulesTab[0]));
+    }
+    return 0;
+  }
+}
+
 uint8_t get_next(const char** list) {
   do {
     (*list)++;
@@ -253,7 +302,8 @@ const char* get_index(const char* list, uint8_t i) {
   return list;
 }
 
-void get_zone_by_name(char* name, uzone_t* zone_out) {
+int get_zone_by_name(char* name, uzone_t* zone_out) {
+  int result = -1;
 #ifndef UTZ_GLOBAL_COUNTERS
   uint16_t utz_k;
 #endif
@@ -261,10 +311,12 @@ void get_zone_by_name(char* name, uzone_t* zone_out) {
   for (utz_k = 0; utz_k < NUM_ZONE_NAMES; utz_k++) {
     if (ustrneq(zone, name, MAX_ZONE_NAME_LEN)) {
       unpack_zone(&zone_defns[get_next(&zone)], name, zone_out);
+      result = 0;
       break;
     } else {
       get_next(&zone);
     }
     zone++;
   }
+  return result;
 }

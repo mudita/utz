@@ -288,6 +288,16 @@ char get_current_offset(uzone_t* zone, udatetime_t* datetime, uoffset_t* offset)
  */
 void unpack_zone(const uzone_packed_t* zone_in, const char* name, uzone_t* zone_out);
 
+/** @brief unpack timezone with complete rules
+ *
+ *  @param zone_in pointer to input packed zone
+ *  @param cur_year year: 1 <= y <= 255 (2001 - 2255)
+ *  @param start_rules pointer to packed rules of start DST
+ *  @param end_rules pointer to packed rules of end DST
+ *  @return 0 if ok; -1 if failed
+ */
+int get_zone_rules(const uzone_packed_t* zone_in, uint8_t cur_year, urule_packed_t* start_rules, urule_packed_t* end_rules);
+
 /** @brief advance pointer to list and returns index to the the prev item
  *
  *  @param list pointer
@@ -299,11 +309,19 @@ uint8_t get_next(const char** list);
  *
  *  @param name the name of the zone to find
  *  @param zone_out pointer for zone found
- *  @return void
+ *  @return 0 if ok; -1 if failed
  */
-void get_zone_by_name(char* name, uzone_t* zone_out);
+int get_zone_by_name(char* name, uzone_t* zone_out);
 
 int16_t udatetime_cmp(udatetime_t* dt1, udatetime_t* dt2);
+
+/** @brief get day in nonleap year
+ *
+ *  @param urule_packed_t pointer to packed rules of DST
+ *  @param cur_year year: 1 <= y <= 255 (2001 - 2255)
+ *  @return day in year (1 <= n <= 365)
+ */
+uint16_t get_day_in_year(urule_packed_t* packedRules, uint8_t cur_year);
 
 #ifdef UTZ_MKTIME
 uint32_t umktime(udatetime_t* dt);
